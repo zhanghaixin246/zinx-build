@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"zinx-build/utils"
 	"zinx-build/ziface"
 )
 
@@ -32,7 +33,12 @@ func CallBackToClient(conn *net.TCPConn, data []byte, cnt int) error {
 }
 
 func (s *Server) Start() {
-	log.Printf("[START] Server listenner at IP:%s,Port %d,is starting \n", s.IP, s.Port)
+	//log.Printf("[START] Server listenner at IP:%s,Port %d,is starting \n", s.IP, s.Port)
+	log.Printf("[START] Server name: %s,listenner at IP: %s,Port %d is starting \n", s.Name, s.IP, s.Port)
+	log.Printf("[Zinx] Version: %s, MaxConn: %d, MaxPacketSize: %d \n",
+		utils.GlobalObject.Version,
+		utils.GlobalObject.MaxConn,
+		utils.GlobalObject.MaxPacketSize)
 	go func() {
 		addr, err := net.ResolveTCPAddr(s.IPVersion, fmt.Sprintf("%s:%d", s.IP, s.Port))
 		if err != nil {
@@ -71,12 +77,13 @@ func (s *Server) Serve() {
 	select {}
 }
 
-func NewServer(name string) ziface.IServer {
+func NewServer() ziface.IServer {
+	utils.GlobalObject.Reload()
 	s := &Server{
-		Name:      name,
+		Name:      utils.GlobalObject.Name,
 		IPVersion: "tcp4",
-		IP:        "0.0.0.0",
-		Port:      7777,
+		IP:        utils.GlobalObject.Host,
+		Port:      utils.GlobalObject.TcpPort,
 		Router:    nil,
 	}
 	return s
@@ -84,5 +91,5 @@ func NewServer(name string) ziface.IServer {
 
 func (s *Server) AddRouter(router ziface.IRouter) {
 	s.Router = router
-	log.Println("AddRouter success ! ")
+	log.Println("AddRouter success! ")
 }
