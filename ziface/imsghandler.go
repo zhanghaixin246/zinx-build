@@ -2,14 +2,11 @@ package ziface
 
 /**
   @author: ZH
-  @since: 2023/11/2
+  @since: 2023/11/15
   @desc: //TODO
 **/
 
-type IServer interface {
-	Start()
-	Stop()
-	Serve()
-
+type IMsgHandle interface {
+	DoMsgHandler(request IRequest)
 	AddRouter(msgId uint32, router IRouter)
 }

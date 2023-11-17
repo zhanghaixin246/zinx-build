@@ -20,7 +20,8 @@ type Server struct {
 	IPVersion string
 	IP        string
 	Port      int
-	Router    ziface.IRouter
+	//Router    ziface.IRouter
+	msgHandler ziface.IMsgHandle
 }
 
 func CallBackToClient(conn *net.TCPConn, data []byte, cnt int) error {
@@ -33,8 +34,8 @@ func CallBackToClient(conn *net.TCPConn, data []byte, cnt int) error {
 }
 
 func (s *Server) Start() {
-	//log.Printf("[START] Server listenner at IP:%s,Port %d,is starting \n", s.IP, s.Port)
-	log.Printf("[START] Server name: %s,listenner at IP: %s,Port %d is starting \n", s.Name, s.IP, s.Port)
+	//log.Printf("[START] Server listener at IP:%s,Port %d,is starting \n", s.IP, s.Port)
+	log.Printf("[START] Server name: %s,listener at IP: %s,Port %d is starting \n", s.Name, s.IP, s.Port)
 	log.Printf("[Zinx] Version: %s, MaxConn: %d, MaxPacketSize: %d \n",
 		utils.GlobalObject.Version,
 		utils.GlobalObject.MaxConn,
@@ -84,7 +85,8 @@ func NewServer() ziface.IServer {
 		IPVersion: "tcp4",
 		IP:        utils.GlobalObject.Host,
 		Port:      utils.GlobalObject.TcpPort,
-		Router:    nil,
+		//Router:    nil,
+		msgHandle:
 	}
 	return s
 }
