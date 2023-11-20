@@ -41,6 +41,8 @@ func (s *Server) Start() {
 		utils.GlobalObject.MaxConn,
 		utils.GlobalObject.MaxPacketSize)
 	go func() {
+		s.msgHandler.StartWorkerPool()
+
 		addr, err := net.ResolveTCPAddr(s.IPVersion, fmt.Sprintf("%s:%d", s.IP, s.Port))
 		if err != nil {
 			log.Println("resolve tcp addr err:", err)
@@ -60,7 +62,7 @@ func (s *Server) Start() {
 				log.Println("Accept err:", err)
 				continue
 			}
-			dealConn := NewConnection(conn, cid, s.Router)
+			dealConn := NewConnection(conn, cid, s.msgHandler)
 			cid++
 			go dealConn.Start()
 		}
@@ -86,12 +88,12 @@ func NewServer() ziface.IServer {
 		IP:        utils.GlobalObject.Host,
 		Port:      utils.GlobalObject.TcpPort,
 		//Router:    nil,
-		msgHandle:
+		msgHandler: NewMsgHandle(),
 	}
 	return s
 }
 
-func (s *Server) AddRouter(router ziface.IRouter) {
-	s.Router = router
+func (s *Server) AddRouter(msgId uint32, router ziface.IRouter) {
+	s.msgHandler.AddRouter(msgId, router)
 	log.Println("AddRouter success! ")
 }

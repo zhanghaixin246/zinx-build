@@ -21,30 +21,37 @@ type GlobalObj struct {
 
 	MaxPacketSize uint32
 	MaxConn       int
+
+	WorkerPoolSize   uint32
+	MaxWorkerTaskLen uint32
+
+	ConfFilePath string
 }
 
 var GlobalObject *GlobalObj
 
-func (g *GlobalObj) Reload(){
-	data,err := ioutil.ReadFile("conf/zinx.json")
+func (g *GlobalObj) Reload() {
+	data, err := ioutil.ReadFile("conf/zinx.json")
 	if err != nil {
 		panic(err)
 	}
-	err = json.Unmarshal(data,&GlobalObject)
+	err = json.Unmarshal(data, &GlobalObject)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func init(){
+func init() {
 	GlobalObject = &GlobalObj{
 		//TcpServer:     nil,
-		Host:          "0.0.0.0",
-		TcpPort:       7777,
-		Name:          "ZinxServerApp",
-		Version:       "V0.4",
-		MaxPacketSize: 12000,
-		MaxConn:       4096,
+		Host:             "0.0.0.0",
+		TcpPort:          7777,
+		Name:             "ZinxServerApp",
+		Version:          "V0.4",
+		MaxPacketSize:    12000,
+		MaxConn:          4096,
+		WorkerPoolSize:   10,
+		MaxWorkerTaskLen: 1024,
 	}
 	GlobalObject.Reload()
 }

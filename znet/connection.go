@@ -20,18 +20,21 @@ type Connection struct {
 	ConnID   uint32
 	isClosed bool
 	//handleAPI    ziface.HandFunc
-	Router       ziface.IRouter
+	//Router       ziface.IRouter
+	MsgHandler   ziface.IMsgHandle
 	ExitBuffChan chan bool
+	msgChan      chan []byte
 }
 
-func NewConnection(conn *net.TCPConn, connID uint32, router ziface.IRouter) *Connection {
+func NewConnection(conn *net.TCPConn, connID uint32, msgHandler ziface.IMsgHandle) *Connection {
 	c := &Connection{
 		Conn:     conn,
 		ConnID:   connID,
 		isClosed: false,
 		//handleAPI:    callbackApi,
-		Router:       router,
+		MsgHandler:   msgHandler,
 		ExitBuffChan: make(chan bool, 1),
+		msgChan:      make(chan []byte),
 	}
 	return c
 }
@@ -83,18 +86,35 @@ func (c *Connection) StartReader() {
 			conn: c,
 			msg:  msg,
 		}
-
-		go func(request ziface.IRequest) {
-			c.Router.PreHandle(request)
-			c.Router.Handle(request)
-			c.Router.PostHandle(request)
-		}(&req)
+		go c.MsgHandler.DoMsgHandler(&req)
+		//go func(request ziface.IRequest) {
+		//	c.Router.PreHandle(request)
+		//	c.Router.Handle(request)
+		//	c.Router.PostHandle(request)
+		//}(&req)
 	}
 
 }
 
+func (c *Connection) StartWriter() {
+	log.Println("[Write Goroutine is running]")
+	defer log.Println(c.RemoteAddr().String(), "[conn Writer exit!]")
+	for {
+		select {
+		case data := <-c.msgChan:
+			if _, err := c.Conn.Write(data); err != nil {
+				log.Println("Send Data error:", err, "Conn Writer exit")
+				return
+			}
+		case <-c.ExitBuffChan:
+			return
+		}
+	}
+}
+
 func (c *Connection) Start() {
 	go c.StartReader()
+	go c.StartWriter()
 	for {
 		select {
 		case <-c.ExitBuffChan:
@@ -138,10 +158,11 @@ func (c *Connection) SendMsg(msgId uint32, data []byte) error {
 		return errors.New("pack error msg")
 	}
 
-	if _, err := c.Conn.Write(msg); err != nil {
-		log.Println("write msg id ", msgId, " error")
-		c.ExitBuffChan <- true
-		return errors.New("conn write error " + err.Error())
-	}
+	//if _, err := c.Conn.Write(msg); err != nil {
+	//	log.Println("write msg id ", msgId, " error")
+	//	c.ExitBuffChan <- true
+	//	return errors.New("conn write error " + err.Error())
+	//}
+	c.msgChan <- msg
 	return nil
 }
